@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+    --animate-typewriter: typing 4s steps(41, end) forwards, blink-caret 0.75s step-end 13 forwards;
+    @keyframes typing {
+        from { width: 0%; }
+        to { width: 41ch; }
+    }
+    @keyframes blink-caret {
+        from { border-color: var(--color-white); }
+        50% { border-color: transparent; }
+        to { border-color: transparent; }
+    }
+}

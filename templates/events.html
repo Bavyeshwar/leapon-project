@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block main %}
+<main class="flex-1 overflow-auto scrollbar-none flex flex-col gap-x-10 justify-start bg-radial-[at_50%_25%] from-sky-400 via-blue-750 to-indigo-950">
+</main>
+<script>
+    const sampleEvents = [
+        {
+            "Title": "Fundraiser",
+            "FormURL": "https://form.com",
+            "Date": "10/11/26",
+            "Time": "10:30 AM",
+            "Location": "Online",
+            "About": "Lorem Ipsum Datum...."
+        }
+    ];
+    document.addEventListener("DOMContentLoaded", () => {
+        const container = document.querySelector("main");
+        for (const event of sampleEvents) {
+            const div = document.createElement('div');
+            div.classList.add("h-fit", "ml-10", "mt-10", "md:ml-20", "md:mt-20", "w-[60em]", "rounded-xl", "focus:outline-none", "z-[2]", "bg-slate-200/50", "px-10", "py-5", "text-lg", "md:text-xl", "lg:text-2xl", "text-white", "flex", "flex-col", "gap-y-10", "justify-start");
+            
+            const date = document.createElement('h3');
+            date.textContent = `Date: ${event["Date"]}`;
+            date.classList.add('text-xl', 'font-semibold', 'hidden');
+
+            const time = document.createElement('h3');
+            time.textContent = `Time: ${event["Time"]}`;
+            time.classList.add('text-xl', 'font-semibold', 'hidden');
+
+            const location = document.createElement('h3');
+            location.textContent = `Location: ${event["Location"]}`;
+            location.classList.add('text-2xl', 'font-bold', 'hidden');
+
+            const link = document.createElement('a');
+            link.innerHTML = `Sign-Up: ${event["FormURL"]}`;
+            link.classList.add('text-xl', 'italic', 'hidden');
+
+            const description = document.createElement('h4');
+            description.textContent = `Description: ${event["About"]}`;
+            description.classList.add('text-lg', 'italic', 'hidden');
+
+            const visibleDiv = document.createElement('div');
+            visibleDiv.classList.add('focus:outline-none', 'flex', 'flex-row', 'text-baseline', 'justify-between', 'py-2', 'px-4', 'w-full', 'h-fit');
+            const title = document.createElement('h1');
+            title.textContent = event["Title"];
+            title.classList.add('focus:outline-none', 'text-4xl', 'font-extrabold');
+            const dropdownBtn = document.createElement('button');
+            dropdownBtn.dataset.click = 0;
+            dropdownBtn.classList.add('focus:outline-none', 'h-7', 'w-7', 'text-white', 'text-xl', 'md:text-3xl', 'lg:text-5xl', 'font-bold', 'border-r-4', 'border-b-4', '-rotate-45', 'hover:cursor-pointer', 'transition-transform', 'duration-300', "data-[click='0']:-rotate-45", "data-[click='1']:rotate-45");
+            dropdownBtn.addEventListener('click', () => {
+                dropdownBtn.dataset.click = dropdownBtn.dataset.click === '0' ? 1 : 0;
+                
+                link.classList.toggle('hidden');
+                description.classList.toggle('hidden');
+                location.classList.toggle('hidden');
+                date.classList.toggle('hidden');
+                time.classList.toggle('hidden');
+                div.classList.toggle('border-2');
+                div.classList.toggle('border-white');
+            });
+            visibleDiv.appendChild(title);
+            visibleDiv.appendChild(dropdownBtn);
+
+            div.appendChild(visibleDiv);
+            div.appendChild(date);
+            div.appendChild(time);
+            div.appendChild(location);
+            div.appendChild(link);
+            div.appendChild(description);
+
+            container.appendChild(div);
+        }
+    });
+</script>
+{% endblock %}

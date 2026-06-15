@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block main %}
+    <main class="flex-1 overflow-hidden scrollbar-none">
+        <canvas id="canvas" class="absolute -z-10"></canvas>
+
+        <div class="flex flex-col text-white mt-10 md:mt-35 ml-5 md:ml-10 relative">
+            <h1 class="focus:outline-none inline-block font-mono text-shadow-xl whitespace-nowrap overflow-hidden animate-typewriter border-r-2 border-r-white text-slate-200 text-xs sm:text-lg md:text-3xl lg:text-5xl font-semibold md:font-bold lg:font-extrabold h-fit py-2">National Lung Cancer Awareness Initiative</h1>
+        </div>
+    </main>
+    <script>
+        let canvas = document.querySelector("#canvas")
+        let bgCtx = canvas.getContext('2d');
+        const min = 0;
+        const max = 30;
+        const range = max - min;
+        let hue1 = min + Math.floor(Math.random() * range);
+        let hue2 = min + Math.floor(Math.random() * range);
+        let dir1 = 1;
+        let dir2 = -1;
+
+        function resize() {
+            let main = document.querySelector('main');
+            canvas.width = main.clientWidth;
+            canvas.height = main.clientHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
+        
+        function makegradient() {
+            const gradient = bgCtx.createLinearGradient(0, 0, 0, canvas.height);
+            
+            gradient.addColorStop(0, `hsl(${hue1}, 90%, 20%)`);
+            gradient.addColorStop(1, `hsl(${hue2}, 90%, 20%)`);
+            
+            bgCtx.fillStyle = gradient;
+            bgCtx.fillRect(0, 0, bgCtx.canvas.width, bgCtx.canvas.height);
+            
+            hue1 += 0.1 * dir1;
+            hue2 += 0.1 * dir2;
+            if (hue1 >= max || hue1 <= min) dir1 *= -1;
+            if (hue2 >= max || hue2 <= min) dir2 *= -1;
+
+            requestAnimationFrame(makegradient);
+        }
+        makegradient();
+    </script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block main %}
+<main class="flex-1 overflow-auto scrollbar-none flex flex-col gap-y-100 pb-5 md:pb-10 justify-start items-center bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900">
+    <section id="searchSpace" class="pt-10 md:pt-20 flex flex-col gap-y-5 md:gap-y-15 h-fit w-fit">
+        <form class="w-fit h-fit px-2 py-2">
+            <input name="location" id="location" placeholder="Search by county, state" autofocus autocomplete="on" class="need-highlight placeholder-purple-500/90 focus:outline-none bg-linear-to-br from-indigo-800 to-pink-500 shadow-sm shadow-slate-950 focus:shadow-xl focus:shadow-fuchsia-500/50 pl-4 h-fit w-[30em] rounded-full caret-fuchsia-500 px-5 py-5 text-white text-lg md:text-xl lg:text-3xl font-semibold autofill:[transition:background-color_999999s_ease-in-out_0s] autofill:[text-fill-color:white]">
+        </form>
+        <div class="hidden h-fit min-w-[10em] pb-10 px-5 py-5 bg-linear-to-tl from-yellow-200 to-yellow-500 shadow-sm hover:shadow-xl shadow-orange-500 rounded-lg border-none focus:outline-none overflow-auto scrollbar-none flex flex-col gap-y-5 md:gap-y-10">
+            <h1 id="title" class="need-highlight w-fit text-shadow-lg px-4 py-4 rounded-lg bg-yellow-300 hover:bg-red-200 text-lg md:text-xl md:font-bold">count1, state1</h1>
+            <h2 id="radonLevel" class="need-highlight w-fit border-3 border-red-500 px-4 py-4 rounded-full bg-red-500/65 hover:bg-slate-500/90 hover:border-slate-300 text-lg md:text-xl md:font-semibold">Radon Level: </h2>
+            <h4 id="explanation" class="need-highlight w-fit px-4 py-4 font-mono underline text-lg md:text-xl">Explanation: </h4>
+        </div>
+    </section>
+</main>
+<script>
+    const sampleData = {
+        "State1": {
+            "County1": 0.9,
+            "County2": 0.7
+        }
+    };
+    function makeCard(state, county, level) {
+        console.log("We made it!!!!!");
+        const container = document.querySelector('#searchSpace').querySelector('div');
+        container.querySelector('#title').innerHTML = `${county}, ${state}`;
+        container.querySelector('#radonLevel').innerText += level;
+        let explanation = level > 0.5 ? "This is a dangerous radon level." : "This is a good radon level.";
+        container.querySelector('#explanation').innerText += explanation;
+        container.classList.toggle('hidden');
+    }
+    function compareStr(str1, str2) {
+        return str1.replace(/\s+/g, '').toLowerCase() === str2.replace(/\s+/g, '').toLowerCase();
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const input = document.querySelector("#location");
+        document.querySelector("form").addEventListener("submit", (e) => {
+            console.log("Entered");
+            e.preventDefault();
+            if (input.value.length > 5 && input.value.includes(',')) {
+                console.log("yayayayaayaya");
+                let titles = input.value.split(", ");
+                if (titles.length === 2) {
+                    console.log("length is good");
+                    const state = titles[1];
+                    const county = titles[0];
+
+                    const stateMatch = Object.keys(sampleData).find(title => compareStr(state, title));
+                    const countyMatch = stateMatch ? Object.keys(sampleData[stateMatch]).find(title => compareStr(title, county)) : undefined;
+                    if (stateMatch && countyMatch) {
+                        makeCard(state, county, sampleData[stateMatch][countyMatch]);
+                    } else {
+                        console.log("Couldn't find match.");
+                    }
+                } else {
+                    alert('Invalid Input');
+                }
+            } else {
+                alert('Invalid Input');
+            }
+        });
+    });
+</script>
+{% endblock %}

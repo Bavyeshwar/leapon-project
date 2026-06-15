@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block main %}
+    <main 
+    class="h-screen w-screen flex justify-center items-center bg-cover bg-center"
+    style="background-image: url('{{ url_for('static', filename='images/forest.jpg') }}');">
+    <div class="flex justify-center items-center rounded-full font-bold text-5xl w-80 h-70 text-red-500 text-shadow-lg bg-green-500/50">ERROR</div>
+    </main>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block main %}
+    <main class="flex-1 overflow-hidden flex flex-col justify-start items-center bg-linear-to-tl/srgb from-slate-500 to-slate-950">
+        
+        <div id="scrollContainer" class="h-full pt-5 pb-32 mt-20 overflow-auto border-none focus:outline-none w-full max-w-300 px-6 rounded-md items-center flex flex-col gap-y-30">
+            
+            <div class="flex flex-col items-center gap-y-5 border-none focus:outline-none text-center">
+                <h2 class="focus:outline-none text-xl md:text-2xl lg:text-4xl text-white font-extrabold">Our Mission & Vision</h2>
+                <hr class="focus:outline-none border-4 border-white w-75 mx-auto">
+                <p class="focus:outline-none text-white text-lg md:text-xl lg:text-3xl max-w-4xl">
+                    The LeapOn Radon Initiative is a student-led public health campaign dedicated to raising awareness about the dangers of residential radon gas and its direct correlation to lung cancer. 
+                </p>
+            </div>
+            
+            <div class="flex flex-col items-center gap-y-5 border-none focus:outline-none text-center">
+                <h3 class="focus:outline-none text-lg md:text-xl lg:text-2xl text-white font-bold">The Challenge</h3>
+                <hr class="focus:outline-none border-3 border-white w-75 mx-auto">
+                <p class="focus:outline-none text-white text-lg md:text-xl lg:text-3xl max-w-4xl">
+                    Radon is an invisible, odorless, and tasteless radioactive gas that can leak into homes through foundational cracks. It is the second-leading cause of lung cancer in the United States, yet millions of homes remain untested.
+                </p>
+            </div>
+            
+            <div class="flex flex-col items-center gap-y-5 border-none focus:outline-none">
+                <h3 class="focus:outline-none text-lg md:text-xl lg:text-2xl text-white font-bold text-center">Our Strategy</h3>
+                <hr class="focus:outline-none border-3 border-white w-75 mx-auto">
+                <ul class="focus:outline-none text-white text-lg md:text-xl lg:text-3xl flex flex-col justify-start gap-y-4 max-w-4xl">
+                    <li><strong>→ Data Aggregation:</strong> Deploying community field teams to conduct radon level testing across states.</li>
+                    <li><strong>→ Geospatial Analysis:</strong> Mapping field data to track high-risk zones in collaboration with academic and environmental health initiatives.</li>
+                    <li id="bottomText"><strong>→ Community Engagement:</strong> Hosting fundraisers and public awareness events.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <span id="scrollIndicator" class="transition-opacity duration-700 text-5xl text-red-700 rounded-full bg-linear-to-br from-slate-800 to-slate-950 animate-bounce fixed bottom-10 right-10 h-15 w-15 flex justify-center items-center pointer-events-none">↓</span>
+    </main>
+    <script>
+        function observeText() {
+            const options = {
+                root: null,
+                threshold: 0.1
+            };
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        document.querySelector("#scrollIndicator").classList.add('opacity-0');
+                    }
+                });
+            }, options);
+
+            observer.observe(document.querySelector("#bottomText"));
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            observeText();
+        });
+    </script>
+{% endblock %}
