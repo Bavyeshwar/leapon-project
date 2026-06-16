@@ -39,10 +39,10 @@
             description.classList.add('text-lg', 'italic', 'hidden');
 
             const visibleDiv = document.createElement('div');
-            visibleDiv.classList.add('focus:outline-none', 'flex', 'flex-row', 'text-baseline', 'justify-between', 'py-2', 'px-4', 'w-full', 'h-fit');
+            visibleDiv.classList.add('focus:outline-none', 'flex', 'flex-row', 'text-baseline', 'justify-between', 'gap-x-[3dvw]', 'py-2', 'px-4', 'w-full', 'h-fit');
             const title = document.createElement('h1');
             title.textContent = event["Title"];
-            title.classList.add('focus:outline-none', 'text-4xl', 'font-extrabold');
+            title.classList.add('focus:outline-none', 'text-xl', 'md:text-2xl', 'lg:text-4xl', 'font-extrabold');
             const dropdownBtn = document.createElement('button');
             dropdownBtn.dataset.click = 0;
             dropdownBtn.classList.add('focus:outline-none', 'h-7', 'w-7', 'text-white', 'text-xl', 'md:text-3xl', 'lg:text-5xl', 'font-bold', 'border-r-4', 'border-b-4', '-rotate-45', 'hover:cursor-pointer', 'transition-transform', 'duration-300', "data-[click='0']:-rotate-45", "data-[click='1']:rotate-45");
