@@ -19,21 +19,39 @@
             .scrollbar-none::-webkit-scrollbar {
                 display: none !important;
             }
-            *:not(.need-highlight)::selection {
+            ::selection {
                 background: transparent;
+            }
+            .need-highlight::selection,
+            .need-highlight *::selection {
+                background: rgba(255, 0, 0, 0.15);
             }
         </style>
     </head>
     <body class="flex flex-col min-h-screen min-w-screen">
-        <nav class="flex-1 flex flex-col md:flex-row sticky items-center top-0 left-0 w-full bg-[#272121] backdrop-blur-md max-h-20 min-h-20 outline-none focus:outline-none justify-between py-1 px-6 shadow-xl z-[50]">
+        <div id="links" class="flex-1 flex flex-col justify-between [&.active]:right-0 transition-all duration-300 bg-slate-950 gap-y-1 md:gap-y-4 lg:gap-y-6 justify-end text-white text-xs md:text-lg lg:text-xl lg:font-semibold h-fit w-fit px-10 py-10 max-w-[40em] fixed top-20 z-[95] -right-[100dvh]">
+            <a id="aboutLink" href="/about" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">About</a>
+            <a id="eventsLink" href="/events" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Events</a>
+            <a id="awarenessLink" href="/awareness" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Awareness</a>
+            <a id="radonLink" href="/radon-levels" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Radon-Levels</a>
+        </div>
+        <nav class="flex-1 flex flex-row sticky items-baseline top-0 left-0 w-full bg-[#272121] backdrop-blur-md max-h-20 min-h-20 outline-none focus:outline-none justify-between py-1 px-6 shadow-xl z-[50] items-center">
             <a id="home" href="/" class=" outline-none focus:outline-none"><h1 class="text-lg md:text-2xl md:font-bold bg-gradient-to-l from-red-900 to-red-500 bg-clip-text text-transparent">Radon Levels</h1></a>
-            <div id="links" class="flex-1 flex flex-row gap-x-1 md:gap-x-4 lg:gap-x-6 justify-end text-white text-xs md:text-lg lg:text-xl lg:font-semibold">
-                <a id="aboutLink" href="/about" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">About</a>
-                <a id="eventsLink" href="/events" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Events</a>
-                <a id="awarenessLink" href="/awareness" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Awareness</a>
-                <a id="radonLink" href="/radon-levels" class=" outline-none focus:outline-none hover:text-red-500 hover:underline">Radon-Levels</a>
+            <div id="menu-btn" class="ml-auto h-[2em] w-[2em] relative [&_span]:h-[0.5em] [&_span]:w-[3em] [&_span]:rounded-lg [&_span]:absolute [&_span]:left-1/2 [&_span]:-translate-x-1/2 [&_span]:bg-slate-200 flex flex-col gap-x-4 group">
+                <span class="top-0 group-[.active]:top-1/2 group-[.active]:-translate-x-1/2 group-[.active]:-translate-y-1/2 group-[.active]:rotate-45"></span>
+                <span class="top-[37%] group-[.active]:opacity-0"></span>
+                <span class="top-[75%] group-[.active]:top-1/2 group-[.active]:-translate-x-1/2 group-[.active]:-translate-y-1/2 group-[.active]:-rotate-45"></span>
             </div>
         </nav>
         {% block main %}{% endblock %}
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const btn = document.querySelector("#menu-btn");
+                btn.addEventListener('click', () => {
+                    document.querySelector('#links').classList.toggle('active');
+                    btn.classList.toggle('active');
+                });
+            });
+        </script>
     </body>
 </html>
