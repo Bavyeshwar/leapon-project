@@ -21,6 +21,7 @@
     }
 
     let fipsLookup = {};
+    let leaponLookup = {};
     let statesLayer;
     let choroplethLayer;
 
@@ -51,9 +52,6 @@
             
             const rawData = await response.json();
             
-            // Build FIPS lookup table dynamically from response structure
-            console.log(rawData);
-
             const epaData = rawData["EPA-Data"];
             Object.values(epaData)
             .flatMap(countyArray => countyArray)
@@ -64,7 +62,17 @@
                     fipsLookup[formattedFips] = item;
                 }
             });
-            console.log(fipsLookup);
+            
+            // 2. Process Leapon Data.
+            const leaponData = rawData["Leapon-Data"];
+            if (Array.isArray(leaponData)) {
+                leaponData.forEach(item => {
+                    if (item && item.FIPS) {
+                        const formattedFips = String(item.FIPS).padStart(5, '0');
+                        leaponLookup[formattedFips] = item;
+                    }
+                });
+            }
 
             // Fetch TopoJSON Geometries
             const topoRes = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json");
@@ -85,13 +93,11 @@
             // Render County Choropleth
             choroplethLayer = L.geoJSON(counties, {
                 style: feature => {
-                    // TopoJSON IDs are padded to 5-digit string FIPS
                     const fips = String(feature.id).padStart(5, '0');
-                    const county = fipsLookup[fips];
-                    if (!county) console.error("GEMINI IS STUPID");
+                    const epaCounty = fipsLookup[fips];
 
                     return {
-                        fillColor: county ? getColor(county["Zone"]) : "#374151",
+                        fillColor: epaCounty ? getColor(epaCounty["Zone"]) : "#374151",
                         fillOpacity: 0.8,
                         color: "#111827",
                         weight: 0.4
@@ -99,40 +105,53 @@
                 },
                 onEachFeature: (feature, layer) => {
                     const fips = String(feature.id).padStart(5, '0');
-                    const county = fipsLookup[fips];
+                    const epaCounty = fipsLookup[fips];
+                    const leaponCounty = leaponLookup[fips];
 
-                    if (!county) return;
+                    // Don't bind popup if neither data source has info for this county
+                    if (!epaCounty && !leaponCounty) return;
 
-                    layer.bindPopup(`
+                    // Base popup content (EPA Info)
+                    let popupContent = `
                         <div class="text-slate-900 font-sans">
-                            <b>${county["COUNTY LABEL"]}, ${county.STATE}</b><br>
-                            EPA Zone: <b>${county.Zone}</b><br>
-                            EPA Region: <b>${county.Region}</b>
-                        </div>
-                    `);
-                    // Mouseover: open popup & change color to gray/highlight
-                    layer.on('mouseover', function (e) {
-                        this.openPopup();
+                            <b>${epaCounty ? epaCounty["COUNTY LABEL"] : 'County'}, ${epaCounty ? epaCounty.STATE : ''}</b><br>
+                            EPA Zone: <b>${epaCounty ? epaCounty.Zone : 'N/A'}</b><br>
+                            EPA Region: <b>${epaCounty ? epaCounty.Region : 'N/A'}</b>
+                    `;
 
-                        // Highlight style
+                    // If Leapon data exists for this FIPS, append it to the popup
+                    if (leaponCounty) {
+                        popupContent += `
+                            <hr class="my-1 border-slate-300">
+                            <div class="text-indigo-900 font-semibold">Leapon Data:</div>
+                            ${Object.entries(leaponCounty)
+                                .filter(([key]) => key !== 'FIPS') // Exclude FIPS from list
+                                .map(([key, val]) => `<span>${key}: <b>${val}</b></span>`)
+                                .join('<br>')}
+                        `;
+                    }
+
+                    popupContent += `</div>`;
+
+                    layer.bindPopup(popupContent);
+
+                    // Hover effects
+                    layer.on('mouseover', function () {
+                        this.openPopup();
                         this.setStyle({
-                            fillColor: "#6b7280", // Gray highlight (or #9ca3af for lighter gray)
+                            fillColor: "#6b7280",
                             fillOpacity: 0.9,
-                            color: "#ffffff",     // White border to make it pop
+                            color: "#ffffff",
                             weight: 1.5
                         });
 
-                        // Bring hovered layer to front so borders render on top
                         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                             this.bringToFront();
                         }
                     });
 
-                    // Mouseout: close popup & reset to original style
                     layer.on('mouseout', function (e) {
                         this.closePopup();
-                        
-                        // Reset layer to default styles defined in choroplethLayer
                         choroplethLayer.resetStyle(e.target);
                     });
                 }
