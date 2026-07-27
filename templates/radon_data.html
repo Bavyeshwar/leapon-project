@@ -1,63 +1,127 @@
 {% extends "layout.html" %}
 {% block main %}
 <main class="flex-1 overflow-auto scrollbar-none flex flex-col gap-y-100 pb-5 md:pb-10 justify-start items-center bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 pb-10">
-    <section id="searchSpace" class="pt-10 md:pt-20 flex flex-col gap-y-5 md:gap-y-15 h-fit w-fit">
-        <form class="w-fit h-fit px-2 py-2">
-            <input name="location" id="location" placeholder="Search by county, state" autofocus autocomplete="on" class="need-highlight placeholder-purple-500/90 focus:outline-none bg-linear-to-br from-indigo-800 to-pink-500 shadow-sm shadow-slate-950 focus:shadow-xl focus:shadow-fuchsia-500/50 pl-4 h-fit w-[70dvw] rounded-full caret-fuchsia-500 px-5 py-5 text-white text-lg md:text-xl lg:text-3xl font-semibold autofill:[transition:background-color_999999s_ease-in-out_0s] autofill:[text-fill-color:white]">
-        </form>
-        <div class="hidden h-fit min-w-[10em] pb-10 px-5 py-5 bg-linear-to-tl from-yellow-200 to-yellow-500 shadow-sm hover:shadow-xl shadow-orange-500 rounded-lg border-none focus:outline-none overflow-auto scrollbar-none flex flex-col gap-y-5 md:gap-y-10">
-            <h1 id="title" class="need-highlight w-fit text-shadow-lg px-4 py-4 rounded-lg bg-yellow-300 hover:bg-red-200 text-lg md:text-xl md:font-bold">count1, state1</h1>
-            <h2 id="radonLevel" class="need-highlight w-fit border-3 border-red-500 px-4 py-4 rounded-full bg-red-500/65 hover:bg-slate-500/90 hover:border-slate-300 text-lg md:text-xl md:font-semibold">Radon Level: </h2>
-            <h4 id="explanation" class="need-highlight w-fit px-4 py-4 font-mono underline text-lg md:text-xl">Explanation: </h4>
-        </div>
-    </section>
+    <div id="map" class="h-[82dvh] w-[96dvw] mt-10 rounded-lg shadow-2xl focus:outline-none"></div>
 </main>
-<script>
-    const sampleData = {
-        "State1": {
-            "County1": 0.9,
-            "County2": 0.7
-        }
-    };
-    function makeCard(state, county, level) {
-        console.log("We made it!!!!!");
-        const container = document.querySelector('#searchSpace').querySelector('div');
-        container.querySelector('#title').innerHTML = `${county}, ${state}`;
-        container.querySelector('#radonLevel').innerText += level;
-        let explanation = level > 0.5 ? "This is a dangerous radon level." : "This is a good radon level.";
-        container.querySelector('#explanation').innerText += explanation;
-        container.classList.toggle('hidden');
-    }
-    function compareStr(str1, str2) {
-        return str1.replace(/\s+/g, '').toLowerCase() === str2.replace(/\s+/g, '').toLowerCase();
-    }
-    document.addEventListener("DOMContentLoaded", () => {
-        const input = document.querySelector("#location");
-        document.querySelector("form").addEventListener("submit", (e) => {
-            console.log("Entered");
-            e.preventDefault();
-            if (input.value.length > 5 && input.value.includes(',')) {
-                console.log("yayayayaayaya");
-                let titles = input.value.split(", ");
-                if (titles.length === 2) {
-                    console.log("length is good");
-                    const state = titles[1];
-                    const county = titles[0];
 
-                    const stateMatch = Object.keys(sampleData).find(title => compareStr(state, title));
-                    const countyMatch = stateMatch ? Object.keys(sampleData[stateMatch]).find(title => compareStr(title, county)) : undefined;
-                    if (stateMatch && countyMatch) {
-                        makeCard(state, county, sampleData[stateMatch][countyMatch]);
-                    } else {
-                        console.log("Couldn't find match.");
-                    }
-                } else {
-                    alert('Invalid Input');
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+
+<script>
+    // 1. Corrected Color Function using EPA Zone logic (1 = High Risk, 3 = Low Risk)
+    function getColor(zone) {
+        switch (zone) {
+            case 1: return "#dc2626"; // Red (Highest)
+            case 2: return "#f97316"; // Orange (Moderate)
+            case 3: return "#facc15"; // Yellow (Lowest)
+            default: return "#374151"; // Gray (Default/No Data)
+        }
+    }
+
+    let fipsLookup = {};
+    let statesLayer;
+    let choroplethLayer;
+
+    // 2. Map Initialization
+    const usBounds = L.latLngBounds(
+        [24.396308, -125.0],   // Southwest
+        [49.384358, -66.93457] // Northeast
+    );
+
+    const map = L.map("map", {
+        preferCanvas: true,
+        zoomControl: true,
+        minZoom: 1.5,
+        maxZoom: 10,
+        // maxBounds: usBounds,
+        // maxBoundsViscosity: 1.0,
+        attributionControl: false
+    });
+
+    map.fitBounds(usBounds);
+
+    // 3. Load Data & Geometries Asynchronously
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            // Fetch Radon Data from API
+            const response = await fetch('/data-api');
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+            const rawData = await response.json();
+            
+            // Build FIPS lookup table dynamically from response structure
+            console.log(rawData);
+
+            const epaData = rawData["EPA-Data"];
+            Object.values(epaData)
+            .flatMap(countyArray => countyArray)
+            .forEach(item => {
+                if (item && item.FIPS) {
+                    // Ensure FIPS is zero-padded to 5 digits (e.g. "01001")
+                    const formattedFips = String(item.FIPS).padStart(5, '0');
+                    fipsLookup[formattedFips] = item;
                 }
-            } else {
-                alert('Invalid Input');
-            }
-        });
+            });
+            console.log(fipsLookup);
+
+            // Fetch TopoJSON Geometries
+            const topoRes = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json");
+            const us = await topoRes.json();
+
+            const states = topojson.feature(us, us.objects.states);
+            const counties = topojson.feature(us, us.objects.counties);
+
+            // Render State Boundaries
+            statesLayer = L.geoJSON(states, {
+                style: {
+                    color: "#000",
+                    weight: 2,
+                    fillOpacity: 0
+                }
+            }).addTo(map);
+
+            // Render County Choropleth
+            choroplethLayer = L.geoJSON(counties, {
+                style: feature => {
+                    // TopoJSON IDs are padded to 5-digit string FIPS
+                    const fips = String(feature.id).padStart(5, '0');
+                    const county = fipsLookup[fips];
+                    if (!county) console.error("GEMINI IS STUPID");
+
+                    return {
+                        fillColor: county ? getColor(county["Zone"]) : "#374151",
+                        fillOpacity: 0.8,
+                        color: "#111827",
+                        weight: 0.4
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const fips = String(feature.id).padStart(5, '0');
+                    const county = fipsLookup[fips];
+
+                    if (!county) return;
+
+                    layer.bindPopup(`
+                        <div class="text-slate-900 font-sans">
+                            <b>${county["COUNTY LABEL"]}, ${county.STATE}</b><br>
+                            EPA Zone: <b>${county.Zone}</b><br>
+                            EPA Region: <b>${county.Region}</b>
+                        </div>
+                    `);
+                    layer.on('mouseover', function () {
+                        this.openPopup();
+                    });
+                    layer.on('mouseout', function () {
+                        this.closePopup();
+                    });
+                }
+            }).addTo(map);
+
+        } catch (error) {
+            console.error('Initialization failed:', error);
+        }
     });
 </script>
 {% endblock %}
