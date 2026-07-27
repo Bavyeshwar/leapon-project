@@ -110,11 +110,30 @@
                             EPA Region: <b>${county.Region}</b>
                         </div>
                     `);
-                    layer.on('mouseover', function () {
+                    // Mouseover: open popup & change color to gray/highlight
+                    layer.on('mouseover', function (e) {
                         this.openPopup();
+
+                        // Highlight style
+                        this.setStyle({
+                            fillColor: "#6b7280", // Gray highlight (or #9ca3af for lighter gray)
+                            fillOpacity: 0.9,
+                            color: "#ffffff",     // White border to make it pop
+                            weight: 1.5
+                        });
+
+                        // Bring hovered layer to front so borders render on top
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            this.bringToFront();
+                        }
                     });
-                    layer.on('mouseout', function () {
+
+                    // Mouseout: close popup & reset to original style
+                    layer.on('mouseout', function (e) {
                         this.closePopup();
+                        
+                        // Reset layer to default styles defined in choroplethLayer
+                        choroplethLayer.resetStyle(e.target);
                     });
                 }
             }).addTo(map);
