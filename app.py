@@ -47,9 +47,16 @@ def radon_api():
         zip_code = str(row[1]["Postal Code"]).strip()
         location = nomi.query_postal_code(zip_code)
         current = row[1]
-        current.pop("City / Town")
         current["County"] = location.county_name
         current["FIPS"] = af.get_county_fips(current["County"], state=current["State"])
+        current.pop("Country")
+        current.pop("Timestamp")
+        current.pop("Data Collected")
+        current.pop("Postal Code")
+        if current["PM2.5 Level"] == "": current.pop("PM2.5 Level")
+        if current["Notes"] == "": current.pop("Notes")
+        if current["Radon Short-Term Average (pCi/L)"] == "": current.pop("Radon Short-Term Average (pCi/L)")
+        if current["Radon Long-Term Average (pCi/L)"] == "": current.pop("Radon Long-Term Average (pCi/L)")
         mapped_data.append(current)
 
     df = None

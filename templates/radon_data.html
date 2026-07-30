@@ -24,6 +24,22 @@
     let leaponLookup = {};
     let statesLayer;
     let choroplethLayer;
+    const ORDER = [
+        "City / Town",
+        "County",
+        "State",
+        "Building Type",
+        "Occupancy Type",
+        "Ventilation During Measurement",
+        "Measurement Start Date",
+        "Measurement Start Time",
+        "Measurement End Date",
+        "Measurement End Time",
+        "Radon Long-Term Average",
+        "Radon Short Term Average",
+        "PM2.5",
+        "Notes"
+    ];
 
     // 2. Map Initialization
     const usBounds = L.latLngBounds(
@@ -36,8 +52,6 @@
         zoomControl: true,
         minZoom: 1.5,
         maxZoom: 10,
-        // maxBounds: usBounds,
-        // maxBoundsViscosity: 1.0,
         attributionControl: false
     });
 
@@ -63,13 +77,16 @@
                 }
             });
             
-            // 2. Process Leapon Data.
+            // 2. Process Leapon Data into arrays per FIPS
             const leaponData = rawData["Leapon-Data"];
             if (Array.isArray(leaponData)) {
                 leaponData.forEach(item => {
                     if (item && item.FIPS) {
                         const formattedFips = String(item.FIPS).padStart(5, '0');
-                        leaponLookup[formattedFips] = item;
+                        if (!leaponLookup[formattedFips]) {
+                            leaponLookup[formattedFips] = [];
+                        }
+                        leaponLookup[formattedFips].push(item);
                     }
                 });
             }
@@ -106,38 +123,79 @@
                 onEachFeature: (feature, layer) => {
                     const fips = String(feature.id).padStart(5, '0');
                     const epaCounty = fipsLookup[fips];
-                    const leaponCounty = leaponLookup[fips];
+                    const leaponEntries = leaponLookup[fips];
 
                     // Don't bind popup if neither data source has info for this county
-                    if (!epaCounty && !leaponCounty) return;
+                    if (!epaCounty && !leaponEntries) return;
 
                     // Base popup content (EPA Info)
-                    let popupContent = `
+                    let hoverContent = `
                         <div class="text-slate-900 font-sans">
                             <b>${epaCounty ? epaCounty["COUNTY LABEL"] : 'County'}, ${epaCounty ? epaCounty.STATE : ''}</b><br>
                             EPA Zone: <b>${epaCounty ? epaCounty.Zone : 'N/A'}</b><br>
                             EPA Region: <b>${epaCounty ? epaCounty.Region : 'N/A'}</b>
                     `;
-
-                    // If Leapon data exists for this FIPS, append it to the popup
-                    if (leaponCounty) {
-                        popupContent += `
+                    // If Leapon data exists for this FIPS, append it to the hover popup.
+                    if (leaponEntries && leaponEntries.length > 0) {
+                        hoverContent += `
                             <hr class="my-1 border-slate-300">
-                            <div class="text-indigo-900 font-semibold">Leapon Data:</div>
-                            ${Object.entries(leaponCounty)
-                                .filter(([key]) => key !== 'FIPS') // Exclude FIPS from list
-                                .map(([key, val]) => `<span>${key}: <b>${val}</b></span>`)
-                                .join('<br>')}
+                            <div class="text-indigo-900 font-semibold">Leapon Data (${leaponEntries.length} entries)...</div>
                         `;
                     }
+                    hoverContent += `</div>`;
+                    layer.bindTooltip(hoverContent, {
+                        sticky: true,
+                        direction: 'auto'
+                    });
 
-                    popupContent += `</div>`;
+                    // Click popup content.
+                    let clickContent = `
+                        <div class="text-slate-900 font-sans">
+                            <b>${epaCounty ? epaCounty["COUNTY LABEL"] : 'County'}, ${epaCounty ? epaCounty.STATE : ''}</b><br>
+                            EPA Zone: <b>${epaCounty ? epaCounty.Zone : 'N/A'}</b><br>
+                            EPA Region: <b>${epaCounty ? epaCounty.Region : 'N/A'}</b>
+                    `;
+                    if (leaponEntries && leaponEntries.length > 0) {
+                        clickContent += `
+                            <div class="mt-2">
+                                <h4 class="font-bold text-xs text-indigo-900 uppercase tracking-wide mb-1.5">
+                                    Leapon Data (${leaponEntries.length})
+                                </h4>
+                                <div class="flex flex-col gap-1.5">
+                        `;
 
-                    layer.bindPopup(popupContent);
+                        leaponEntries.forEach((entry, idx) => {
+                            const entryLabel = `Entry #${idx + 1}`;
+                            clickContent += `
+                                <details class="group bg-slate-50 border border-slate-200 rounded text-xs overflow-hidden">
+                                    <summary class="cursor-pointer font-medium p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 flex justify-between items-center select-none">
+                                        <span>${entryLabel}</span>
+                                        <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                                    </summary>
+                                    <div class="p-2 border-t border-slate-200 space-y-1 bg-white">`
+                            ORDER.forEach(key => {
+                                // Check if key exists.
+                                if (entry.hasOwnProperty(key) && entry[key] !== null && entry[key] !== undefined) {
+                                    clickContent += `
+                                        <div class="flex justify-between gap-2 border-b border-slate-100 last:border-none pb-0.5">
+                                            <span class="text-slate-500">${key}:</span>
+                                            <span class="font-semibold text-slate-800 text-right">${entry[key]}</span>
+                                        </div>
+                                    `;
+                                }
+                            })
+                            clickContent += `</div></details>`;
+                        });
+                        clickContent += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                    clickContent += `</div>`;
+                    layer.bindPopup(clickContent);
 
                     // Hover effects
                     layer.on('mouseover', function () {
-                        this.openPopup();
                         this.setStyle({
                             fillColor: "#6b7280",
                             fillOpacity: 0.9,
@@ -149,16 +207,14 @@
                             this.bringToFront();
                         }
                     });
-
                     layer.on('mouseout', function (e) {
-                        this.closePopup();
                         choroplethLayer.resetStyle(e.target);
                     });
                 }
             }).addTo(map);
 
         } catch (error) {
-            console.error('Initialization failed:', error);
+            console.error('Map initialization failed:', error);
         }
     });
 </script>
