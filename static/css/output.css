@@ -715,9 +715,6 @@
   .pt-5 {
     padding-top: calc(var(--spacing) * 5);
   }
-  .pb-0\.5 {
-    padding-bottom: calc(var(--spacing) * 0.5);
-  }
   .pb-5 {
     padding-bottom: calc(var(--spacing) * 5);
   }
