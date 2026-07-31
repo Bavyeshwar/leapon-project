@@ -40,6 +40,11 @@
         "PM2.5",
         "Notes"
     ];
+    const DESCRIPTIONS = {
+        1: "Zone 1: High Risk (>4 pCi/L)",
+        2: "Zone 2: Moderate Risk (2-4 pCi/L)",
+        3: "Zone 3: Low Risk (<2 pCi/L)"
+    };
 
     // 2. Map Initialization
     const usBounds = L.latLngBounds(
@@ -132,8 +137,7 @@
                     let hoverContent = `
                         <div class="text-slate-900 font-sans">
                             <b>${epaCounty ? epaCounty["COUNTY LABEL"] : 'County'}, ${epaCounty ? epaCounty.STATE : ''}</b><br>
-                            EPA Zone: <b>${epaCounty ? epaCounty.Zone : 'N/A'}</b><br>
-                            EPA Region: <b>${epaCounty ? epaCounty.Region : 'N/A'}</b>
+                            EPA Zone: <b>${epaCounty ? DESCRIPTIONS[epaCounty.Zone] : 'N/A'}</b><br>
                     `;
                     // If Leapon data exists for this FIPS, append it to the hover popup.
                     if (leaponEntries && leaponEntries.length > 0) {
@@ -152,8 +156,7 @@
                     let clickContent = `
                         <div class="text-slate-900 font-sans">
                             <b>${epaCounty ? epaCounty["COUNTY LABEL"] : 'County'}, ${epaCounty ? epaCounty.STATE : ''}</b><br>
-                            EPA Zone: <b>${epaCounty ? epaCounty.Zone : 'N/A'}</b><br>
-                            EPA Region: <b>${epaCounty ? epaCounty.Region : 'N/A'}</b>
+                            EPA Zone: <b>${epaCounty ? DESCRIPTIONS[epaCounty.Zone] : 'N/A'}</b><br>
                     `;
                     if (leaponEntries && leaponEntries.length > 0) {
                         clickContent += `
