@@ -87,7 +87,7 @@
             if (Array.isArray(leaponData)) {
                 leaponData.forEach(item => {
                     if (item && item.FIPS) {
-                        const formattedFips = String(item.FIPS).padStart(5, '0');
+                        const formattedFips = String(item.FIPS);
                         if (!leaponLookup[formattedFips]) {
                             leaponLookup[formattedFips] = [];
                         }
